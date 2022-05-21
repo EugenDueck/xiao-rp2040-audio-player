@@ -7,7 +7,9 @@
 
 ## parts
 
-### PIR: Panasonic Electric Works EKMC1601111
+### Seeed [XIAO RP2040](https://www.seeedstudio.com/XIAO-RP2040-v1-0-p-5026.html) $5.40
+
+### PIR: Panasonic Electric Works [EKMC1601111](https://akizukidenshi.com/catalog/g/gM-09750/) 500 Yen
 
 | Type                  | Description            |
 |-----------------------|------------------------|
@@ -20,7 +22,7 @@
 | Operating Temperature | -20°C ~ 60°C (TA)      |
 | Detection Pattern     | Standard               |
 
-### Speaker 8Ω 8W akizukidenshi.com P-03285
+### Speaker 8Ω 8W [P-03285](https://akizukidenshi.com/catalog/g/gP-03285/) 100 Yen
 | Type                 | Description    |
 |----------------------|----------------|
 | Size                 | 50mm / 2inch   |
