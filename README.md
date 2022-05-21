@@ -71,21 +71,21 @@ sox file.wav -c1 -r44100 -tdat - \
 
 ### Absolute Maximum Ratings (Ta = 25°C)
 
-| Characteristics             | Symbol |     Rating | Unit |
-|-----------------------------+--------+------------+------|
-| Collector-base voltage      | V_CBO  |         80 | V    |
-| Collector-emitter voltage   | V_CEO  |         50 | V    |
-| Emitter-base voltage        | V_EBO  |          6 | V    |
-| Collector current           | I_C    |          2 | A    |
-| Base current                | I_B    |        0.2 | A    |
-| Collector power dissipation | P_C    |        900 | mW   |
-| Junction temperature        | Tj     |        150 | °C   |
+| Characteristics             | Symbol | Rating     | Unit |
+|-----------------------------|--------|------------|------|
+| Collector-base voltage      | V_CBO  | 80         | V    |
+| Collector-emitter voltage   | V_CEO  | 50         | V    |
+| Emitter-base voltage        | V_EBO  | 6          | V    |
+| Collector current           | I_C    | 2          | A    |
+| Base current                | I_B    | 0.2        | A    |
+| Collector power dissipation | P_C    | 900        | mW   |
+| Junction temperature        | Tj     | 150        | °C   |
 | Storage temperature range   | Tstg   | −55 to 150 | °C   |
 
 ### Electrical Characteristics (Ta = 25°C)
 
 | Characteristics                      | Symbol    | Test Condition                         | Min | Typ | Max | Unit |
-|--------------------------------------+-----------+----------------------------------------+-----+-----+-----+------|
+|--------------------------------------|-----------|----------------------------------------|-----|-----|-----|------|
 | Collector cut-off current            | I_CBO     | V_CB = 80 V, I_E = 0                   | ―   | ―   | 1.0 | μA   |
 | Emitter cut-off current              | I_EBO     | V_EB = 6 V, I_C = 0                    | ―   | ―   | 1.0 | μA   |
 | Collector-emitter breakdown voltage  | V_(BR)CEO | I_C = 10 mA, I_B = 0                   | 50  | ―   | ―   | V    |
