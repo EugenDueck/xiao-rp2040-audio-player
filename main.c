@@ -4,15 +4,13 @@
 #include "hardware/irq.h"
 #include "hardware/pwm.h"
 #include "hardware/sync.h"
-#include "hardware/adc.h"
 
 #include "samples.h"
 #define SAMPLE_RATE 44100
 
 #define AUDIO_PIN 0
-#define ADC_CHANNEL 2
-
 #define PIR_PIN 1
+
 const uint USER_LED_B = 25;
 const uint USER_LED_G = 16;
 const uint USER_LED_R = 17;
