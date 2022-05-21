@@ -2,10 +2,10 @@
 
 ![Circuit Diagram](xiao-rp2040-audioplayer.png)
 
-- red components handle audio
 - blue components handle motion detection
+- red components handle audio
 
-## parts
+## Parts
 
 ### Seeed [XIAO RP2040](https://www.seeedstudio.com/XIAO-RP2040-v1-0-p-5026.html) $5.40
 
