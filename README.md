@@ -70,6 +70,7 @@ sox file.wav -c1 -r44100 -tdat - \
 [Datasheet](https://cdn.datasheetspdf.com/pdf-down/C/4/4/C4408_ToshibaSemiconductor.pdf)
 
 ### Absolute Maximum Ratings (Ta = 25°C)
+
 | Characteristics             | Symbol |     Rating | Unit |
 |-----------------------------+--------+------------+------|
 | Collector-base voltage      | V_CBO  |         80 | V    |
@@ -82,6 +83,7 @@ sox file.wav -c1 -r44100 -tdat - \
 | Storage temperature range   | Tstg   | −55 to 150 | °C   |
 
 ### Electrical Characteristics (Ta = 25°C)
+
 | Characteristics                      | Symbol    | Test Condition                         | Min | Typ | Max | Unit |
 |--------------------------------------+-----------+----------------------------------------+-----+-----+-----+------|
 | Collector cut-off current            | I_CBO     | V_CB = 80 V, I_E = 0                   | ―   | ―   | 1.0 | μA   |
