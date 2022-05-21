@@ -12,6 +12,8 @@ mkdir build
 cd build
 cmake ..
 make
+# deploy binary
+cp xiao-rp2040-audio-player.uf2 /media/$USERNAME/RPI-RP2/
 ```
 
 # Convert audio file to samples.h
