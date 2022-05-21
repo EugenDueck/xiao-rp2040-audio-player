@@ -33,7 +33,7 @@ sox file.wav -c1 -r44100 -tdat - \
 - [RP2040 chip datasheet](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf)
 - [Getting started with Raspberry Pi Pico](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf) (C/C++ development with RP2040-based boards)
 - [Raspberry Pi Pico C/C++ SDK](https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-c-sdk.pdf) (Libraries and tools for C/C++ development on RP2040 microcontrollers)
-  - the Seeed XIAO RP2040 board has been added to the SDK in [version 1.3.1](https://github.com/raspberrypi/pico-sdk/releases/tag/1.3.1) on 2022/5/19
+  - the Seeed XIAO RP2040 board has been added to the [pico-sdk](https://github.com/raspberrypi/pico-sdk) in [version 1.3.1](https://github.com/raspberrypi/pico-sdk/releases/tag/1.3.1) on 2022/5/19
 
 ## PIR: Panasonic Electric Works [EKMC1601111](https://www3.panasonic.biz/ac/e/search_num/index.jsp?c=detail&part_no=EKMC1601111) [500 Yen](https://akizukidenshi.com/catalog/g/gM-09750/)
 
