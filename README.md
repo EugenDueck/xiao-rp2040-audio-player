@@ -34,6 +34,18 @@
 | Magnet Mass          | 25.8g / 0.91oz |
 | Total Mass           | 100g           |
 
-## Transistor 2SC4408
+### Transistor 2SC4408
 
-## Variable Resistor 10kΩ
+### Variable Resistor 10kΩ
+
+## Convert audio file to samples.h
+The *rate* parameter `-r` below can changed, but don't forget to set `SAMPLE_RATE` in main.h accordingly
+```
+sox file.wav -c1 -r44100 -tdat - \
+| tail -n+3 \
+| awk '
+  BEGIN { printf "const uint8_t __in_flash() audio_buffer[] = {\n" }
+  { printf "  %.0f,\n", ($2+1)*128}
+  END { printf "};\n"}' \
+> samples.h
+```
