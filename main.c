@@ -15,7 +15,7 @@ const uint USER_LED_B = 25;
 const uint USER_LED_G = 16;
 const uint USER_LED_R = 17;
 
-// PIR reading often flip-flop, which is why we will
+// PIR readings often flip-flop, which is why we will
 // do some averaging here over the last PIR_AVERAGING_COUNT
 // PIR readings, taken at intervals of PIR_READ_INTERVAL milliseconds
 const uint PIR_READ_INTERVAL = 100;
@@ -50,6 +50,8 @@ void init_led(uint pin) {
   turn_off_led(pin);
 }
 
+// by default, these leds are always on
+// let's turn them off
 void init_leds() {
   init_led(USER_LED_R);
   init_led(USER_LED_G);
@@ -114,11 +116,12 @@ void detect_motion_loop(uint pir_pin, uint led_pin) {
 
 //////////////////////////////////
 // audio
+//////////////////////////////////
+
 // code taken from
 // https://github.com/GregAC/pico-stuff/blob/main/pwm_audio/pwm_audio_dma.c
 // as described on his blog
 // https://gregchadwick.co.uk/blog/playing-with-the-pico-pt3/
-//////////////////////////////////
 
 uint32_t single_sample = 0;
 uint32_t* single_sample_ptr = &single_sample;
