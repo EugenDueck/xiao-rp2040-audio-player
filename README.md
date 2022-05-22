@@ -6,13 +6,17 @@
 - red components handle audio
 
 # Build instructions
+- install pico-sdk (to ~/pico-sdk)
+  - if pico-sdk is located in a different directory, change PICO_SDK_PATH in CMakeLists.txt
+- if using a board other than seeed_xiao_rp2040, set PICO_BOARD in CMakeLists.txt accordingly
+- make XIAO accessible via USB mass storage: while pressing and holding the BOOT button, press the RESET button
 ```
-export PICO_BOARD=seeed_xiao_rp2040
 mkdir build
 cd build
 cmake ..
 make
-# deploy binary
+
+# deploy binary: (assuming the XIAO is mounted at /media/$USERNAME/RPI-RP2)
 cp xiao-rp2040-audio-player.uf2 /media/$USERNAME/RPI-RP2/
 ```
 
