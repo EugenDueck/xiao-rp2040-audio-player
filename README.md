@@ -5,6 +5,13 @@
 - blue components handle motion detection
 - red components handle audio
 
+# Notes
+- this program currently plays 8-bit files at an arbitrary, fixed sample rate
+  - the bundled samples.h file has a rate of 44.1kHz
+- 8 bit sound is pretty noisy, compared to the 16 bit original
+  - I have tried the following circuit from [here](https://theorycircuit.com/simple-single-transistor-audio-amplifier-circuit/), which features a capacitor, as is common in amp circuits, but sound did not improve
+![Simple Single Transistor Audio Amplifier Circuit](https://theorycircuit.com/wp-content/uploads/2019/06/Simple-single-transistor-audio-amplifier-circuit.png)
+
 # Build instructions
 - install pico-sdk (to ~/pico-sdk)
   - if pico-sdk is located in a different directory, change PICO_SDK_PATH in CMakeLists.txt
@@ -20,18 +27,48 @@ make
 cp xiao-rp2040-audio-player.uf2 /media/$USERNAME/RPI-RP2/
 ```
 
+# Create sine wave samples.h
+```
+SAMPLE_RATE=44100 # Hz
+SAMPLE_BITS=16
+SINE_FREQ=441     # Hz
+SAMPLES_LENGTH=1  # seconds
+seq 0 $(echo '('$SAMPLES_LENGTH '*' $SAMPLE_RATE')' - 1|bc) \
+| awk '
+    BEGIN {
+        pi = atan2(0, -1)
+        sinemul = (2*pi)/('${SAMPLE_RATE}/${SINE_FREQ}')
+        mul = 2^('$SAMPLE_BITS'-1)-1
+        printf "#define SAMPLE_RATE '$SAMPLE_RATE'\n"
+        printf "#define SAMPLE_BITS '$SAMPLE_BITS'\n"
+        printf "const uint'$SAMPLE_BITS'_t __in_flash() audio_buffer[] = {\n"
+    }
+    { printf "  %.0f,\n", (sin($1 * sinemul) + 1) * mul }
+    END { printf "};\n" }' \
+> samples.h
+```
 # Convert audio file to samples.h
 The *rate* parameter `-r` below can changed, but don't forget to set `SAMPLE_RATE` in main.c accordingly
 ```
-sox file.wav -c1 -r44100 -tdat - \
+SAMPLE_RATE=44100 # Hz
+SAMPLE_BITS=16
+INPUT_FILE=mond-6sec.wav
+WRAP=3015
+sox $INPUT_FILE -c1 -r$SAMPLE_RATE -tdat - \
 | tail -n+3 \
 | awk '
-  BEGIN { printf "const uint8_t __in_flash() audio_buffer[] = {\n" }
-  { printf "  %.0f,\n", ($2+1)*128}
+    BEGIN {
+        mul='$WRAP'/2.0
+        printf "// input file: '$INPUT_FILE'\n"
+        printf "#define SAMPLE_RATE '$SAMPLE_RATE'\n"
+        printf "#define SAMPLE_BITS '$SAMPLE_BITS'\n"
+        printf "#define WRAP '$WRAP'\n"
+        printf "const uint'$SAMPLE_BITS'_t __in_flash() audio_buffer[] = {\n"
+    }
+  { printf "  %.0f,\n", ($2 + 1) * mul }
   END { printf "};\n"}' \
 > samples.h
 ```
-
 # Parts
 
 ## Seeed [XIAO RP2040](https://www.seeedstudio.com/XIAO-RP2040-v1-0-p-5026.html) [790 Yen](https://www.marutsu.co.jp/pc/i/2229736/)

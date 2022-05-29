@@ -1,12 +1,16 @@
+#include <math.h>
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "hardware/dma.h"
 #include "hardware/irq.h"
 #include "hardware/pwm.h"
 #include "hardware/sync.h"
+#include "hardware/vreg.h"
+
+#define SYS_CLOCK_KHZ 133000
+//#define VREG_VOLTAGE VREG_VOLTAGE_1_30
 
 #include "samples.h"
-#define SAMPLE_RATE 44100
 
 #define AUDIO_PIN 0
 #define PIR_PIN 1
@@ -24,11 +28,15 @@ const uint PIR_READ_INTERVAL = 100;
 void detect_motion_loop(uint pir_pin, uint led_pin);
 void init_leds();
 void setup_audio_dma();
+void my_pwm_dma(int pin);
 
 int main() {
+  //  vreg_set_voltage(VREG_VOLTAGE);
+  set_sys_clock_khz(SYS_CLOCK_KHZ, true);
   init_leds();
-  setup_audio_dma();
-  detect_motion_loop(PIR_PIN, USER_LED_B);
+  my_pwm_dma(AUDIO_PIN);
+  //  detect_motion_loop(PIR_PIN, USER_LED_B);
+  return 0;
 }
 
 //////////////////////////////////
@@ -86,12 +94,12 @@ void detect_motion_loop(uint pir_pin, uint led_pin) {
       turn_off_led(led_pin);
     }
   }
-  
+
   bool in_motion = false;
   while (true) {
     int cur_reading = gpio_get(pir_pin);
     int prev_reading = get_and_set_reading(cur_reading);
-    
+
     if (cur_reading) {
       if (!prev_reading) {
         last_readings_sum++;
@@ -117,117 +125,62 @@ void detect_motion_loop(uint pir_pin, uint led_pin) {
 //////////////////////////////////
 // audio
 //////////////////////////////////
+const uint16_t MAX_DMA_TRANSFER_COUNT = 65535;
+uint32_t remaining_transfer_count = count_of(audio_buffer);
+uint pwm_chan;
 
-// code taken from
-// https://github.com/GregAC/pico-stuff/blob/main/pwm_audio/pwm_audio_dma.c
-// as described on his blog
-// https://gregchadwick.co.uk/blog/playing-with-the-pico-pt3/
-
-uint32_t single_sample = 0;
-uint32_t* single_sample_ptr = &single_sample;
-
-int pwm_dma_chan, trigger_dma_chan, sample_dma_chan;
-
-#define REPETITION_RATE 4
-
-void dma_irh() {
-  dma_hw->ch[sample_dma_chan].al1_read_addr = audio_buffer;
-  dma_hw->ch[trigger_dma_chan].al3_read_addr_trig = &single_sample_ptr;
-
-  dma_hw->ints0 = (1u << trigger_dma_chan);
+void trigger_dma_isr() {
+  dma_hw->ints0 = 1u << pwm_chan;
+  if (remaining_transfer_count == 0) {
+    dma_channel_set_read_addr(pwm_chan, audio_buffer, false);
+    remaining_transfer_count = count_of(audio_buffer);
+  }
+  uint16_t transfer_count = remaining_transfer_count > MAX_DMA_TRANSFER_COUNT ? MAX_DMA_TRANSFER_COUNT : remaining_transfer_count;
+  remaining_transfer_count -= transfer_count;
+  dma_channel_set_trans_count(pwm_chan, transfer_count, true);
+  //dma_channel_start(pwm_chan);
 }
 
-void setup_audio_dma() {
-  stdio_init_all();
-
-  gpio_set_function(AUDIO_PIN, GPIO_FUNC_PWM);
-
-  int audio_pin_slice = pwm_gpio_to_slice_num(AUDIO_PIN);
-
+void my_pwm_dma(int pin) {
+  enum dma_channel_transfer_size dma_size;
+  switch (SAMPLE_BITS) {
+  case 8: dma_size = DMA_SIZE_8; break;
+  case 16: dma_size = DMA_SIZE_16; break;
+  case 32: dma_size = DMA_SIZE_32; break;
+  }
+  
   pwm_config config = pwm_get_default_config();
-  pwm_config_set_clkdiv(&config, (480000.f / SAMPLE_RATE) / REPETITION_RATE);
-  pwm_config_set_wrap(&config, 254);
-  pwm_init(audio_pin_slice, &config, true);
+  pwm_config_set_clkdiv(&config, 1.00028955750348785174f);
+  pwm_config_set_wrap(&config, WRAP);
+  gpio_set_function(pin, GPIO_FUNC_PWM);
+  int slice_num = pwm_gpio_to_slice_num(pin);
+  pwm_init(slice_num, &config, true);
 
-  pwm_dma_chan = dma_claim_unused_channel(true);
-  trigger_dma_chan = dma_claim_unused_channel(true);
-  sample_dma_chan = dma_claim_unused_channel(true);
+  pwm_chan = dma_claim_unused_channel(true);
 
-  // Setup PWM DMA channel
-  dma_channel_config pwm_dma_chan_config = dma_channel_get_default_config(pwm_dma_chan);
-  // Transfer 32-bits at a time
-  channel_config_set_transfer_data_size(&pwm_dma_chan_config, DMA_SIZE_32);
-  // Read from a fixed location, always writes to the same address
-  channel_config_set_read_increment(&pwm_dma_chan_config, false);
-  channel_config_set_write_increment(&pwm_dma_chan_config, false);
-  // Chain to sample DMA channel when done
-  channel_config_set_chain_to(&pwm_dma_chan_config, sample_dma_chan);
-  // Transfer on PWM cycle end
-  channel_config_set_dreq(&pwm_dma_chan_config, DREQ_PWM_WRAP0 + audio_pin_slice);
+  dma_channel_config pwm_chan_config = dma_channel_get_default_config(pwm_chan);
+  channel_config_set_transfer_data_size(&pwm_chan_config, dma_size);
+  channel_config_set_read_increment(&pwm_chan_config, true);
+  channel_config_set_write_increment(&pwm_chan_config, false);
+  channel_config_set_dreq(&pwm_chan_config, DREQ_PWM_WRAP0 + slice_num);
 
+  uint16_t transfer_count = count_of(audio_buffer) > MAX_DMA_TRANSFER_COUNT ? MAX_DMA_TRANSFER_COUNT : count_of(audio_buffer);
   dma_channel_configure(
-                        pwm_dma_chan,
-                        &pwm_dma_chan_config,
-                        // Write to PWM slice CC register
-                        &pwm_hw->slice[audio_pin_slice].cc,
-                        // Read from single_sample
-                        &single_sample,
-                        // Transfer once per desired sample repetition
-                        REPETITION_RATE,
-                        // Don't start yet
-                        false
+                        pwm_chan,
+                        &pwm_chan_config,
+                        &pwm_hw->slice[slice_num].cc, // write_addr
+                        audio_buffer,                 // read_addr
+                        transfer_count,               // transfer_count
+                        false                         // trigger immediately
                         );
 
-  // Setup trigger DMA channel
-  dma_channel_config trigger_dma_chan_config = dma_channel_get_default_config(trigger_dma_chan);
-  // Transfer 32-bits at a time
-  channel_config_set_transfer_data_size(&trigger_dma_chan_config, DMA_SIZE_32);
-  // Always read and write from and to the same address
-  channel_config_set_read_increment(&trigger_dma_chan_config, false);
-  channel_config_set_write_increment(&trigger_dma_chan_config, false);
-  // Transfer on PWM cycle end
-  channel_config_set_dreq(&trigger_dma_chan_config, DREQ_PWM_WRAP0 + audio_pin_slice);
-
-  dma_channel_configure(
-                        trigger_dma_chan,
-                        &trigger_dma_chan_config,
-                        // Write to PWM DMA channel read address trigger
-                        &dma_hw->ch[pwm_dma_chan].al3_read_addr_trig,
-                        // Read from location containing the address of single_sample
-                        &single_sample_ptr,
-                        // Need to trigger once for each audio sample but as the PWM DREQ is
-                        // used need to multiply by repetition rate
-                        REPETITION_RATE * sizeof(audio_buffer) / sizeof(audio_buffer[0]),
-                        false
-                        );
-
-  // Fire interrupt when trigger DMA channel is done
-  dma_channel_set_irq0_enabled(trigger_dma_chan, true);
-  irq_set_exclusive_handler(DMA_IRQ_0, dma_irh);
+  dma_channel_set_irq0_enabled(pwm_chan, true);
+  irq_set_exclusive_handler(DMA_IRQ_0, trigger_dma_isr);
   irq_set_enabled(DMA_IRQ_0, true);
 
-  // Setup sample DMA channel
-  dma_channel_config sample_dma_chan_config = dma_channel_get_default_config(sample_dma_chan);
-  // Transfer 8-bits at a time
-  channel_config_set_transfer_data_size(&sample_dma_chan_config, DMA_SIZE_8);
-  // Increment read address to go through audio buffer
-  channel_config_set_read_increment(&sample_dma_chan_config, true);
-  // Always write to the same address
-  channel_config_set_write_increment(&sample_dma_chan_config, false);
+  trigger_dma_isr();
 
-  dma_channel_configure(
-                        sample_dma_chan,
-                        &sample_dma_chan_config,
-                        // Write to single_sample
-                        &single_sample,
-                        // Read from audio buffer
-                        audio_buffer,
-                        // Only do one transfer (once per PWM DMA completion due to chaining)
-                        1,
-                        // Don't start yet
-                        false
-                        );
-
-  // Kick things off with the trigger DMA channel
-  dma_channel_start(trigger_dma_chan);
+  while (true)
+    __wfi();
+  //    tight_loop_contents();
 }
