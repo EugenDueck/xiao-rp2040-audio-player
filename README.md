@@ -1,13 +1,15 @@
-![box open](box-open.jpg)
-
-![box closed](box-closed.jpg)
-
 # Circuit
 
 ![Circuit Diagram](xiao-rp2040-audioplayer.png)
 
 - blue components handle motion detection
 - red components handle audio
+
+# Photos
+
+![box open](box-open.jpg)
+
+![box closed](box-closed.jpg)
 
 # Notes
 - this program currently plays 8-bit files at an arbitrary, fixed sample rate
