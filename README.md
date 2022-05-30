@@ -27,42 +27,22 @@ make
 cp xiao-rp2040-audio-player.uf2 /media/$USERNAME/RPI-RP2/
 ```
 
-# Create sine wave samples.h
-```
-SAMPLE_RATE=44100 # Hz
-SAMPLE_BITS=16
-SINE_FREQ=441     # Hz
-SAMPLES_LENGTH=1  # seconds
-seq 0 $(echo '('$SAMPLES_LENGTH '*' $SAMPLE_RATE')' - 1|bc) \
-| awk '
-    BEGIN {
-        pi = atan2(0, -1)
-        sinemul = (2*pi)/('${SAMPLE_RATE}/${SINE_FREQ}')
-        mul = 2^('$SAMPLE_BITS'-1)-1
-        printf "#define SAMPLE_RATE '$SAMPLE_RATE'\n"
-        printf "#define SAMPLE_BITS '$SAMPLE_BITS'\n"
-        printf "const uint'$SAMPLE_BITS'_t __in_flash() audio_buffer[] = {\n"
-    }
-    { printf "  %.0f,\n", (sin($1 * sinemul) + 1) * mul }
-    END { printf "};\n" }' \
-> samples.h
-```
 # Convert audio file to samples.h
 The *rate* parameter `-r` below can changed, but don't forget to set `SAMPLE_RATE` in main.c accordingly
 ```
 SAMPLE_RATE=44100 # Hz
 SAMPLE_BITS=16
-INPUT_FILE=mond-6sec.wav
-WRAP=3015
+INPUT_FILE=wieso.wav
+PWM_WRAP=3015
 sox $INPUT_FILE -c1 -r$SAMPLE_RATE -tdat - \
 | tail -n+3 \
 | awk '
     BEGIN {
-        mul='$WRAP'/2.0
+        mul='$PWM_WRAP'/2.0
         printf "// input file: '$INPUT_FILE'\n"
         printf "#define SAMPLE_RATE '$SAMPLE_RATE'\n"
         printf "#define SAMPLE_BITS '$SAMPLE_BITS'\n"
-        printf "#define WRAP '$WRAP'\n"
+        printf "#define PWM_WRAP '$PWM_WRAP'\n"
         printf "const uint'$SAMPLE_BITS'_t __in_flash() audio_buffer[] = {\n"
     }
   { printf "  %.0f,\n", ($2 + 1) * mul }

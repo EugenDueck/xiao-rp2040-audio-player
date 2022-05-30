@@ -12,7 +12,7 @@
 
 #include "samples.h"
 
-#define AUDIO_PIN 0
+#define AUDIO_PIN 4
 #define PIR_PIN 1
 
 const uint USER_LED_B = 25;
@@ -20,22 +20,24 @@ const uint USER_LED_G = 16;
 const uint USER_LED_R = 17;
 
 // PIR readings often flip-flop, which is why we will
-// do some averaging here over the last PIR_AVERAGING_COUNT
+// do some smoothing here over the last PIR_AVERAGING_COUNT
 // PIR readings, taken at intervals of PIR_READ_INTERVAL milliseconds
 const uint PIR_READ_INTERVAL = 100;
-#define PIR_AVERAGING_COUNT 10
+#define PIR_AVERAGING_COUNT 30
+const uint PIR_READINGS_MIN_SUM = 20;
 
 void detect_motion_loop(uint pir_pin, uint led_pin);
 void init_leds();
-void setup_audio_dma();
-void my_pwm_dma(int pin);
+void setup_pwm_dma(int pin);
+void play_audio(uint8_t plays, bool block_until_done);
 
 int main() {
   //  vreg_set_voltage(VREG_VOLTAGE);
   set_sys_clock_khz(SYS_CLOCK_KHZ, true);
   init_leds();
-  my_pwm_dma(AUDIO_PIN);
-  //  detect_motion_loop(PIR_PIN, USER_LED_B);
+  setup_pwm_dma(AUDIO_PIN);
+
+  detect_motion_loop(PIR_PIN, USER_LED_B);
   return 0;
 }
 
@@ -73,7 +75,6 @@ void init_leds() {
 int last_readings[PIR_AVERAGING_COUNT];
 int last_readings_idx = 0;
 int last_readings_sum = 0;
-int readings_min_sum = (PIR_AVERAGING_COUNT / 2) + 1;
 
 int get_and_set_reading(int reading) {
   int prev_reading = last_readings[last_readings_idx];
@@ -87,34 +88,21 @@ void detect_motion_loop(uint pir_pin, uint led_pin) {
   gpio_init(pir_pin);
   gpio_set_dir(pir_pin, GPIO_IN);
 
-  while (!true) {
-    if (gpio_get(pir_pin)) {
-      turn_on_led(led_pin);
-    } else {
-      turn_off_led(led_pin);
-    }
-  }
-
   bool in_motion = false;
   while (true) {
     int cur_reading = gpio_get(pir_pin);
     int prev_reading = get_and_set_reading(cur_reading);
 
     if (cur_reading) {
-      if (!prev_reading) {
-        last_readings_sum++;
-        if (last_readings_sum >= readings_min_sum && !in_motion) {
-          in_motion = true;
-          turn_on_led(led_pin);
-        }
+      if (!prev_reading && ++last_readings_sum > PIR_READINGS_MIN_SUM && !in_motion) {
+        in_motion = true;
+        turn_on_led(led_pin);
+        play_audio(1, false);
       }
     } else {
-      if (prev_reading) {
-        last_readings_sum--;
-        if (last_readings_sum < readings_min_sum && in_motion) {
-          in_motion = false;
-          turn_off_led(led_pin);
-        }
+      if (prev_reading && --last_readings_sum <= PIR_READINGS_MIN_SUM && in_motion) {
+        in_motion = false;
+        turn_off_led(led_pin);
       }
     }
     sleep_ms(PIR_READ_INTERVAL);
@@ -126,12 +114,15 @@ void detect_motion_loop(uint pir_pin, uint led_pin) {
 // audio
 //////////////////////////////////
 const uint16_t MAX_DMA_TRANSFER_COUNT = 65535;
-uint32_t remaining_transfer_count = count_of(audio_buffer);
+volatile uint8_t remaining_plays = 0;
+uint32_t remaining_transfer_count = 0;
 uint pwm_chan;
 
 void trigger_dma_isr() {
   dma_hw->ints0 = 1u << pwm_chan;
   if (remaining_transfer_count == 0) {
+    if (--remaining_plays == 0)
+      return;
     dma_channel_set_read_addr(pwm_chan, audio_buffer, false);
     remaining_transfer_count = count_of(audio_buffer);
   }
@@ -141,17 +132,17 @@ void trigger_dma_isr() {
   //dma_channel_start(pwm_chan);
 }
 
-void my_pwm_dma(int pin) {
+void setup_pwm_dma(int pin) {
   enum dma_channel_transfer_size dma_size;
   switch (SAMPLE_BITS) {
   case 8: dma_size = DMA_SIZE_8; break;
   case 16: dma_size = DMA_SIZE_16; break;
   case 32: dma_size = DMA_SIZE_32; break;
   }
-  
+
   pwm_config config = pwm_get_default_config();
   pwm_config_set_clkdiv(&config, 1.00028955750348785174f);
-  pwm_config_set_wrap(&config, WRAP);
+  pwm_config_set_wrap(&config, PWM_WRAP);
   gpio_set_function(pin, GPIO_FUNC_PWM);
   int slice_num = pwm_gpio_to_slice_num(pin);
   pwm_init(slice_num, &config, true);
@@ -177,10 +168,18 @@ void my_pwm_dma(int pin) {
   dma_channel_set_irq0_enabled(pwm_chan, true);
   irq_set_exclusive_handler(DMA_IRQ_0, trigger_dma_isr);
   irq_set_enabled(DMA_IRQ_0, true);
+}
+
+void play_audio(uint8_t plays, bool block_until_done) {
+  if (remaining_plays != 0) // still running - ignore request to play
+    return;
+
+  remaining_plays = plays + 1; // gets decremented immediately once in trigger_dma_isr()
+  remaining_transfer_count = 0;
 
   trigger_dma_isr();
 
-  while (true)
+  while (block_until_done && remaining_plays > 0)
     __wfi();
   //    tight_loop_contents();
 }
