@@ -1,3 +1,7 @@
+![box open](box-open.jpg)
+
+![box closed](box-closed.jpg)
+
 # Circuit
 
 ![Circuit Diagram](xiao-rp2040-audioplayer.png)
@@ -91,6 +95,12 @@ sox $INPUT_FILE -c1 -r$SAMPLE_RATE -tdat - \
 ## Transistor 2SC4408
 
 [Datasheet](https://cdn.datasheetspdf.com/pdf-down/C/4/4/C4408_ToshibaSemiconductor.pdf)
+
+### Alternative transistor: 2SD2012
+
+After heating up my 2SC4408 too much during soldering - at least that's what I'm guessing - it stopped amplifying, so I went for this transistor, that I had lying around.
+
+[Datasheet](https://alltransistors.com/adv/pdfdatasheet_st/2sd2012_2.pdf)
 
 ### Absolute Maximum Ratings (Ta = 25°C)
 
