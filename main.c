@@ -28,14 +28,14 @@ const uint PIR_READINGS_MIN_SUM = 20;
 
 void detect_motion_loop(uint pir_pin, uint led_pin);
 void init_leds();
-void setup_pwm_dma(int pin);
+void setup_audio(int pin);
 void play_audio(uint8_t plays, bool block_until_done);
 
 int main() {
   //  vreg_set_voltage(VREG_VOLTAGE);
   set_sys_clock_khz(SYS_CLOCK_KHZ, true);
   init_leds();
-  setup_pwm_dma(AUDIO_PIN);
+  setup_audio(AUDIO_PIN);
 
   detect_motion_loop(PIR_PIN, USER_LED_B);
   return 0;
@@ -132,7 +132,7 @@ void trigger_dma_isr() {
   //dma_channel_start(pwm_chan);
 }
 
-void setup_pwm_dma(int pin) {
+void setup_audio(int pin) {
   enum dma_channel_transfer_size dma_size;
   switch (SAMPLE_BITS) {
   case 8: dma_size = DMA_SIZE_8; break;
