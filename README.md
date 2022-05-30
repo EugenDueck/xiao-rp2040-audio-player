@@ -12,10 +12,10 @@
 ![box closed](box-closed.jpg)
 
 # Notes
-- this program currently plays 8-bit files at an arbitrary, fixed sample rate
-  - the bundled samples.h file has a rate of 44.1kHz
-- 8 bit sound is pretty noisy, compared to the 16 bit original
-  - I have tried the following circuit from [here](https://theorycircuit.com/simple-single-transistor-audio-amplifier-circuit/), which features a capacitor, as is common in amp circuits, but sound did not improve
+- this program currently plays up to 16 bit sample files at an arbitrary, fixed sample rate
+  - the bundled samples.h file has a sample rate of 44.1kHz and a dynamic range of 3015 values (~ 11.6 bits)
+- 8 bit sound was pretty noisy, compared to the 16 bit original, 11.6 bits is waaaaay better
+  - I also tried the following circuit from [here](https://theorycircuit.com/simple-single-transistor-audio-amplifier-circuit/), which features a resistor/capacitor combo, as is common in amp circuits, but sound did not improve - to my ears
 ![Simple Single Transistor Audio Amplifier Circuit](https://theorycircuit.com/wp-content/uploads/2019/06/Simple-single-transistor-audio-amplifier-circuit.png)
 
 # Build instructions
