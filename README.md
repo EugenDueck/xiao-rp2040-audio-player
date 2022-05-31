@@ -38,7 +38,7 @@ The *rate* parameter `-r` below can changed, but don't forget to set `SAMPLE_RAT
 ```
 SAMPLE_RATE=44100 # Hz
 SAMPLE_BITS=16
-INPUT_FILE=wieso.wav
+INPUT_FILE=teatime.flac
 PWM_WRAP=3015
 sox $INPUT_FILE -c1 -r$SAMPLE_RATE -tdat - \
 | tail -n+3 \
