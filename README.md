@@ -37,7 +37,6 @@ cp xiao-rp2040-audio-player.uf2 /media/$USERNAME/RPI-RP2/
 ```
 
 # Convert audio file to samples.h
-The *rate* parameter `-r` below can changed, but don't forget to set `SAMPLE_RATE` in main.c accordingly
 ```
 SAMPLE_RATE=44100 # Hz
 SAMPLE_BITS=16
