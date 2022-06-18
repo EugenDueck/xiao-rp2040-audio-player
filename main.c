@@ -12,6 +12,8 @@
 
 #include "samples.h"
 
+#define AUDIO_ENABLED true
+#define LEDS_ENABLED true
 #define AUDIO_PIN 4
 #define PIR_PIN 1
 
@@ -23,10 +25,13 @@ const uint USER_LED_R = 17;
 // do some smoothing here over the last PIR_AVERAGING_COUNT
 // PIR readings, taken at intervals of PIR_READ_INTERVAL milliseconds
 const uint PIR_READ_INTERVAL = 100;
-#define PIR_AVERAGING_COUNT 30
-const uint PIR_READINGS_MIN_SUM = 20;
+#define PIR_AVERAGING_COUNT 5
+const uint PIR_READINGS_MIN_SUM = 5;
 
-void detect_motion_loop(uint pir_pin, uint led_pin);
+// allows us to activate and place the device, without it going off already
+const uint INITIAL_SLEEP_MS = 5000;
+
+void detect_motion_loop(uint pir_pin, uint led_pin, uint led_pin_above_threshold);
 void init_leds();
 void setup_audio(int pin);
 void play_audio(uint8_t plays, bool block_until_done);
@@ -35,9 +40,12 @@ int main() {
   //  vreg_set_voltage(VREG_VOLTAGE);
   set_sys_clock_khz(SYS_CLOCK_KHZ, true);
   init_leds();
-  setup_audio(AUDIO_PIN);
+  if (AUDIO_ENABLED)
+    setup_audio(AUDIO_PIN);
 
-  detect_motion_loop(PIR_PIN, USER_LED_B);
+  sleep_ms(INITIAL_SLEEP_MS);
+
+  detect_motion_loop(PIR_PIN, USER_LED_B, USER_LED_R);
   return 0;
 }
 
@@ -84,7 +92,7 @@ int get_and_set_reading(int reading) {
   return prev_reading;
 }
 
-void detect_motion_loop(uint pir_pin, uint led_pin) {
+void detect_motion_loop(uint pir_pin, uint led_pin, uint led_pin_above_threshold) {
   gpio_init(pir_pin);
   gpio_set_dir(pir_pin, GPIO_IN);
 
@@ -94,15 +102,22 @@ void detect_motion_loop(uint pir_pin, uint led_pin) {
     int prev_reading = get_and_set_reading(cur_reading);
 
     if (cur_reading) {
-      if (!prev_reading && ++last_readings_sum > PIR_READINGS_MIN_SUM && !in_motion) {
-        in_motion = true;
+      if (LEDS_ENABLED)
         turn_on_led(led_pin);
-        play_audio(1, false);
+      if (!prev_reading && ++last_readings_sum >= PIR_READINGS_MIN_SUM && !in_motion) {
+        in_motion = true;
+        if (LEDS_ENABLED)
+          turn_on_led(led_pin_above_threshold);
+        if (AUDIO_ENABLED)
+          play_audio(1, false);
       }
     } else {
-      if (prev_reading && --last_readings_sum <= PIR_READINGS_MIN_SUM && in_motion) {
-        in_motion = false;
+      if (LEDS_ENABLED)
         turn_off_led(led_pin);
+      if (prev_reading && --last_readings_sum < PIR_READINGS_MIN_SUM && in_motion) {
+        in_motion = false;
+        if (LEDS_ENABLED)
+          turn_off_led(led_pin_above_threshold);
       }
     }
     sleep_ms(PIR_READ_INTERVAL);

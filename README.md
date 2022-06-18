@@ -1,15 +1,16 @@
 # Circuit
 
-![Circuit Diagram](xiao-rp2040-audioplayer.png)
+![Circuit Diagram](images/xiao-rp2040-audioplayer.png)
 
 - blue components handle motion detection
 - red components handle audio
 
 # Photos
 
-![box open](box-open.jpg)
-
-![box closed](box-closed.jpg)
+[front isometric](xiao-proximity-audio-player-front-isometric.jpg)
+[side bottom](xiao-proximity-audio-player-side-bottom.jpg)
+[open 1](xiao-proximity-audio-player-open-1.jpg)
+[open 2](xiao-proximity-audio-player-open-2.jpg)
 
 # Notes
 - this program currently plays up to 16 bit sample files at an arbitrary, fixed sample rate
@@ -17,6 +18,8 @@
 - 8 bit sound was pretty noisy when compared to the 16 bit original, 11.6 bits are so much less noisy than 8 bits
   - I also tried the following circuit from [here](https://theorycircuit.com/simple-single-transistor-audio-amplifier-circuit/), which features a resistor/capacitor combo, as is common in amp circuits, but sound did not improve - to my ears
 ![Simple Single Transistor Audio Amplifier Circuit](https://theorycircuit.com/wp-content/uploads/2019/06/Simple-single-transistor-audio-amplifier-circuit.png)
+- the range of the PIR sensor was way too high (up to 7m), so I put a couple of [polyethylene sheets](#5-polyethylene-bags-0-03mm-3-85-yen-77-yen-20) in front of it
+  - this meant there weren't any false alarms in my tests on the street where I plan to use it (though I'm sure there will be some in practice), so I could disable the "5 second averaging" smooting mechanism in my code, which leads to a less delayed reaction to motion
 
 # Build instructions
 - install pico-sdk (to ~/pico-sdk)
@@ -135,3 +138,6 @@ After heating up my 2SC4408 too much during soldering - at least that's what I'm
 | Switching time Fall time             | t_f       | I_B1 = −I_B2 = 0.05 A, duty cycle ≤ 1% | ―   | 0.1 | ―   | μs   |
 
 ## Variable Resistor 10kΩ
+
+## 5 Polyethylene bags 0.03mm [3.85 Yen (77 Yen / 20)](https://store.shopping.yahoo.co.jp/oyakudachi-shop/taiyoupori-2-kakuhaibin.html)
+- each of the 5 bags conists of 2 layers of 0.03mm polyethylene sheet, folded in half means we get a total thickness of `2 x 2 x 5 x 0.03mm = 0.6mm`
