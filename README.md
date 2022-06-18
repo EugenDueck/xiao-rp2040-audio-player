@@ -7,10 +7,10 @@
 
 # Photos
 
-[front isometric](xiao-proximity-audio-player-front-isometric.jpg)
-[side bottom](xiao-proximity-audio-player-side-bottom.jpg)
-[open 1](xiao-proximity-audio-player-open-1.jpg)
-[open 2](xiao-proximity-audio-player-open-2.jpg)
+[front isometric](images/xiao-proximity-audio-player-front-isometric.jpg)
+[side bottom](images/xiao-proximity-audio-player-side-bottom.jpg)
+[open 1](images/xiao-proximity-audio-player-open-1.jpg)
+[open 2](images/xiao-proximity-audio-player-open-2.jpg)
 
 # Notes
 - this program currently plays up to 16 bit sample files at an arbitrary, fixed sample rate
