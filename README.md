@@ -141,3 +141,5 @@ After heating up my 2SC4408 too much during soldering - at least that's what I'm
 
 ## 5 Polyethylene bags 0.03mm [3.85 Yen (77 Yen / 20)](https://store.shopping.yahoo.co.jp/oyakudachi-shop/taiyoupori-2-kakuhaibin.html)
 - each of the 5 bags conists of 2 layers of 0.03mm polyethylene sheet, folded in half means we get a total thickness of `2 x 2 x 5 x 0.03mm = 0.6mm`
+
+## Plastic case SW-65S [115 Yen](https://akizukidenshi.com/catalog/g/gP-12048/)
